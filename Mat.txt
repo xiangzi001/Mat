@@ -17,4 +17,15 @@ SVD_QR所有情况已完成
 SVD的单步Jacobi迭代（full）
 删除SVD中EVD_full的方法
 
+3.0
+优化SVD,QR
+修改Det
+添加复数complex
+更新QR的complex
+添加纯复数Schur分解
 
+3.1
+修改BUG
+添加单纯解特征值
+添加幂级数函数Func类
+添加解一元高次方程
