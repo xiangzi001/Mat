@@ -53,3 +53,7 @@ SVD集中双对角迭代
 修改Solve的直接解法
 添加Solve迭代方法Jacobi,GS,SOR,CG,SD
 
+4.3
+改进双对角迭代
+添加仅算奇异值函数
+添加dqds方法
