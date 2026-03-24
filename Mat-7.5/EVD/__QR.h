@@ -22,14 +22,20 @@ void __EVD_Q_HouseHolder(MAT<T>& Q, MAT<T>& R, T* v) {
 
 		__times(w, hr, w, n);
 
+		__set0(v, n);
 		for (int i = 0; i < n; ++i) {
-			v[i] = __dot(R.data + (n + 1) * (i + 1) + 1, w, n);
+			__mixed(v + i, R.data + (n + 2) * (i + 1), w[i], v + i, n - i);
 		}
 		for (int i = 0; i < n; ++i) {
-			__mixed(R.data + (n + 1) * (i + 1) + 1, v, -w[i], R.data + n * i, n);
+			v[i] += __dot(R.data + (n + 2) * (i + 1) + 1, w + i + 1, n - i - 1);
+		}
+
+		hr = __dot(v, w, n);
+		for (int i = 0; i < n; ++i) {
+			__mixed(R.data + (n + 2) * (i + 1), v + i, -w[i], R.data + (n + 1) * i, n - i);
 		}
 		for (int i = 0; i < n; ++i) {
-			__mixed(R.data + n * i, w, -__dot(w, R.data + n * i, n), R.data + n * i, n);
+			__mixed(R.data + (n + 1) * i, w + i, -v[i] + w[i] * hr, R.data + (n + 1) * i, n - i);
 		}
 		a[m] = temp;
 		b[m] = -cr;

@@ -14,6 +14,11 @@ public:
 		real(a), imag(0)
 	{
 	}
+	template<typename t>
+	complex(complex<t> a) :
+		real(a.real), imag(a.imag)
+	{
+	}
 	template<typename t_1, typename t_2>
 	complex(t_1 r, t_2 i) :
 		real(r), imag(i)

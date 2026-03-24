@@ -90,12 +90,12 @@ void __Schur_QR_R(MAT<T>& Q, MAT<T>& R, int m, int n, double eps) {
 			if (m + 4 < n) k = m + 4;
 			else k = n;
 			for (i = 0; i < k; ++i) {
-				Temp = R[i];
+				Temp = R[i] + m;
 
-				temp = Temp[m] * w[0] + Temp[m + 1] * w[1] + Temp[m + 2] * w[2];
-				Temp[m] -= w[0] * temp;
-				Temp[m + 1] -= w[1] * temp;
-				Temp[m + 2] -= w[2] * temp;
+				temp = Temp[0] * w[0] + Temp[1] * w[1] + Temp[2] * w[2];
+				Temp[0] -= w[0] * temp;
+				Temp[1] -= w[1] * temp;
+				Temp[2] -= w[2] * temp;
 			}
 			__Schur_HouseHolder_Right(R[m] + m, R[m + 1] + m, R[m + 2] + m, w, R.cols - m);
 			__Schur_HouseHolder_Right(Q[m], Q[m + 1], Q[m + 2], w, Q.rows);
@@ -111,12 +111,12 @@ void __Schur_QR_R(MAT<T>& Q, MAT<T>& R, int m, int n, double eps) {
 				if (r + 4 < n) k = r + 4;
 				else k = n;
 				for (i = 0; i < k; ++i) {
-					Temp = R[i];
+					Temp = R[i] + r;
 
-					temp = Temp[r] * w[0] + Temp[r + 1] * w[1] + Temp[r + 2] * w[2];
-					Temp[r] -= w[0] * temp;
-					Temp[r + 1] -= w[1] * temp;
-					Temp[r + 2] -= w[2] * temp;
+					temp = Temp[0] * w[0] + Temp[1] * w[1] + Temp[2] * w[2];
+					Temp[0] -= w[0] * temp;
+					Temp[1] -= w[1] * temp;
+					Temp[2] -= w[2] * temp;
 				}
 				k = r - 1;
 				__Schur_HouseHolder_Right(R[r] + k, R[r + 1] + k, R[r + 2] + k, w, R.rows - k);
@@ -135,10 +135,10 @@ void __Schur_QR_R(MAT<T>& Q, MAT<T>& R, int m, int n, double eps) {
 			}
 
 			for (i = 0; i < n; ++i) {
-				Temp = R[i];
-				temp = Temp[r] * x + Temp[r + 1] * y;
-				Temp[r + 1] = Temp[r + 1] * x - Temp[r] * y;
-				Temp[r] = temp;
+				Temp = R[i] + r;
+				temp = Temp[0] * x + Temp[1] * y;
+				Temp[1] = Temp[1] * x - Temp[0] * y;
+				Temp[0] = temp;
 			}
 			k = r - 1;
 			__ApplyGivensOnTheRight(R[r] + k, R[r + 1] + k, x, y, R.cols - k);
@@ -162,11 +162,10 @@ void __Schur_QR_R(MAT<T>& Q, MAT<T>& R, int m, int n, double eps) {
 			if (m + 3 < n) k = m + 3;
 			else k = n;
 			for (i = 0; i < k; ++i) {
-				Temp = R[i];
-
-				temp = Temp[m] * x + Temp[m + 1] * y;
-				Temp[m + 1] = Temp[m + 1] * x - Temp[m] * y;
-				Temp[m] = temp;
+				Temp = R[i] + m;
+				temp = Temp[0] * x + Temp[1] * y;
+				Temp[1] = Temp[1] * x - Temp[0] * y;
+				Temp[0] = temp;
 			}
 			__ApplyGivensOnTheRight(R[m] + m, R[m + 1] + m, x, y, R.cols - m);
 			__ApplyGivensOnTheRight(Q[m], Q[m + 1], x, y, Q.rows);
@@ -186,11 +185,10 @@ void __Schur_QR_R(MAT<T>& Q, MAT<T>& R, int m, int n, double eps) {
 				if (r + 3 < n) k = r + 3;
 				else k = n;
 				for (i = 0; i < k; ++i) {
-					Temp = R[i];
-
-					temp = Temp[r] * x + Temp[r + 1] * y;
-					Temp[r + 1] = Temp[r + 1] * x - Temp[r] * y;
-					Temp[r] = temp;
+					Temp = R[i] + r;
+					temp = Temp[0] * x + Temp[1] * y;
+					Temp[1] = Temp[1] * x - Temp[0] * y;
+					Temp[0] = temp;
 				}
 				k = r - 1;
 				__ApplyGivensOnTheRight(R[r] + k, R[r + 1] + k, x, y, R.rows - k);

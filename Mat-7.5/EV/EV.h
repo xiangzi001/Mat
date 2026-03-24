@@ -5,17 +5,12 @@
 template<typename t>
 void __EV(MAT<t>& A, complex<t>* v, double eps) {
 	int i;
-	t a, b;
-	t* w = (t*) v;
+	t a;
+	complex<t> b;
 
-	/*
-	bool flag = true;
-	while (flag) {
-		flag = __EV_R_BalanceMatrix(A, w, w + A.rows, 1);
-	}
-	__EV_HouseHolder_R(A, w, w + A.rows);
+	__EV_HouseHolder_R(A, (t*)v, (t*)v + A.rows);
+
 	__EV_QR_R(A, 0, A.rows, eps);
-	*/
 
 	i = 0;
 	while (i < A.cols - 1) {
@@ -35,6 +30,18 @@ void __EV(MAT<t>& A, complex<t>* v, double eps) {
 		v[i] = A(i, i);
 	}
 }
+template<typename t>
+void __EV(MAT<complex<t>>& A, complex<t>* v, double eps) {
+	int i;
+	complex<t>* w = new complex<t>[A.cols];
+	__EV_HouseHolder_I(A, w, v);
+	delete[] w;
+	__EV_Givens_I(A, 0, A.rows, eps);
+
+	for (i = 0; i < A.rows; ++i) {
+		v[i] = A(i, i);
+	}
+}
 
 template<typename t1, typename t2>
 void EV(MAT<t1>& A, complex<t2>* v, double eps) {
@@ -42,18 +49,6 @@ void EV(MAT<t1>& A, complex<t2>* v, double eps) {
 	__EV(B, v, eps);
 }
 
-template<typename t>
-void __EV(MAT<complex<t>>& A, complex<t>* v, double eps) {
-	int i;
-	complex<t>* w = new complex<t>[A.cols];
-	__EV_HouseHolder_I(A, w, v);
-	delete[] w;
-	__EV_Givens(A, 0, A.rows, eps);
-
-	for (i = 0; i < A.rows; ++i) {
-		v[i] = A(i, i);
-	}
-}
 template<typename t1, typename t2>
 void EV(MAT<complex<t1>>& A, complex<t2>* v, double eps) {
 	MAT<complex<t2>>B = A;
@@ -80,7 +75,7 @@ void Roots(Func<complex<t1>>& func, complex<t2>* ans, double eps) {
 	for (i = 1; i < A.rows; ++i) 
 		A(i, i - 1) = 1;
 	
-	__EV_Givens(A, 0, A.rows, eps);
+	__EV_Givens_I(A, 0, A.rows, eps);
 
 	for (i = 0; i < A.rows; ++i) {
 		ans[i] = A(i, i);

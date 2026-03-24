@@ -45,43 +45,59 @@ void quickSort(T* arr, int left, int right, int* pos) {
 }
 
 template<typename T>
-inline T __EVD_Q_QR_CDC_Solve_EigenValue(int n, T* z, T* d, T x) {
+inline T __EVD_Q_QR_CDC_Solve_EigenValue(int n, T* z, T* d, T x, int k) {
+	T temp = 0;
 	T a = 0;
-	for (int i = 0; i < n; ++i) {
+	for (int i = 0; i < k; ++i) {
 		a += z[i] / (d[i] - x);
 	}
-	a = a + 1;
+	for (int i = n - 1; i >= k; --i) {
+		temp += z[i] / (d[i] - x);
+	}
+	a = a + temp + 1;
+
+	temp = 0;
 	T b = 0;
-	for (int i = 0; i < n; ++i) {
+	for (int i = 0; i < k; ++i) {
 		b += z[i] / ((d[i] - x) * (d[i] - x));
 	}
-	b = b;
+	for (int i = n - 1; i >= k; --i) {
+		temp += z[i] / ((d[i] - x) * (d[i] - x));
+	}
+	b = b + temp;
 	return a / b;
 }
 template<typename T>
-inline T __EVD_Q_QR_CDC_Solve_EigenValue_Start(int n, T* z, T* d, int i) {
+inline T __EVD_Q_QR_CDC_Solve_EigenValue_Start(int n, T* z, T* d, int i, T eps) {
 	if (i == n - 1) {
-		/*
-		T temp = 0;
-		for (int k = 0; k < i; ++k) {
-			temp += z[k] / d[k];
-		}
-		return (1 + temp) / (z[i]);
-		*/
 		return 1;
 	}
 	else {
-		T a = z[i];
+		T a = 0;
 		T temp = 0;
 		for (int k = 0; k < i; ++k) {
 			temp += z[k] / d[k];
 		}
-		for (int k = i + 1; k < n; ++k) {
-			temp += z[k] / d[k];
+		for (int k = n - 1; k > i;--k) {
+			a += z[k] / d[k];
 		}
+		temp = temp + a;
+		a = z[i];
 		T b = 1 + z[i] / d[i + 1] + temp;
-		T c = (1 + temp) / d[i + 1] - z[i + 1] / (d[i + 1] * d[i + 1]);
-		return (b + sqrt(b * b - 4 * a * c)) / (2 * a);
+
+		if (a < eps) {
+			if (b > 0) {
+				return b / a;
+			}
+			else {
+				T c = (1 + temp) / d[i + 1] - z[i + 1] / (d[i + 1] * d[i + 1]);
+				return c / b;
+			}
+		}
+		else {
+			T c = (1 + temp) / d[i + 1] - z[i + 1] / (d[i + 1] * d[i + 1]);
+			return (b + sqrt(b * b - 4 * a * c)) / (2 * a);
+		}
 	}
 }
 
@@ -89,44 +105,24 @@ template<typename T>
 inline void __EVD_Q_QR_CDC_u(int n, T* w, T* d, T* u, T p, T eps) {
 	T temp;
 	int i, j;
-	/*
 	for (i = 0; i < n; ++i) {
-		temp = (w[i] - d[i]) / p;
+		temp = p / (w[i] - d[i]);
 
 		for (j = 0; j < i; ++j)
-			temp *= (w[j] - d[i]) / (d[j] - d[i]);
+			temp *= (d[j] - d[i]) / (w[j] - d[i]);
 		for (j = i + 1; j < n; ++j)
-			temp *= (w[j] - d[i]) / (d[j] - d[i]);
+			temp *= (d[j] - d[i]) / (w[j] - d[i]);
 
 		if (u[i] < 0)
-			u[i] = -sqrt(temp);
+			u[i] = -1.0 / sqrt(temp);
 		else
-			u[i] = sqrt(temp);
-	}
-	*/
-	for (i = 0; i < n; ++i) {
-		if (u[i] * u[i] * fabs(p) < eps) {
-			continue;
-		}
-		else {
-			temp = p / (w[i] - d[i]);
-
-			for (j = 0; j < i; ++j)
-				temp *= (d[j] - d[i]) / (w[j] - d[i]);
-			for (j = i + 1; j < n; ++j)
-				temp *= (d[j] - d[i]) / (w[j] - d[i]);
-
-			if (u[i] < 0)
-				u[i] = -1.0 / sqrt(temp);
-			else
-				u[i] = 1.0 / sqrt(temp);
-		}
+			u[i] = 1.0 / sqrt(temp);
 	}
 }
 
 template<typename T>
 void __EVD_Q_QR_CDC_Solve(T* w, T* v, MAT<T>& Q, MAT<T>& Temp, int* pos, double eps) {
-	if (Q.rows <= 16) {
+	if (Q.rows <= 500) {
 		__set0(Q.data, Q.rows * Q.cols);
 		for (int i = 0; i < Q.rows; ++i) {
 			Q[i][i] = 1;
@@ -166,7 +162,7 @@ void __EVD_Q_QR_CDC_Solve(T* w, T* v, MAT<T>& Q, MAT<T>& Temp, int* pos, double 
 		__EVD_Q_QR_CDC_Solve(w, v, Q1, Temp1, pos, eps);
 		__EVD_Q_QR_CDC_Solve(w + s, v + s, Q2, Temp2, pos, eps);
 		
-		int i, j, m = 0;
+		int i, j;
 		T x, temp, shift = 0;
 
 		__copy(d, w, Q.rows);
@@ -181,25 +177,9 @@ void __EVD_Q_QR_CDC_Solve(T* w, T* v, MAT<T>& Q, MAT<T>& Temp, int* pos, double 
 		for (i = 0; i < Q.rows; ++i) {
 			pos[i] = i;
 		}
-		for (i = 0; i < Q.rows; ++i) {
-			if (u[i] * u[i] * fabs(p) < eps) {
-				j = pos[i];
-				pos[i] = pos[m];
-				pos[m] = j;
 
-				temp = v[i];
-				v[i] = v[m];
-				v[m] = temp;
-
-				++m;
-			}
-		}
-
-		for (i = 0; i < m; ++i) {
-			w[i] = v[i];
-		}
 		__times(v, 1.0 / p, v, Q.rows);
-		quickSort(v, m, Q.rows - 1, pos);
+		quickSort(v, 0, Q.rows - 1, pos);
 		for (i = 0; i < Q.rows; ++i) {
 			z[i] = u[pos[i]];
 		}
@@ -208,20 +188,30 @@ void __EVD_Q_QR_CDC_Solve(T* w, T* v, MAT<T>& Q, MAT<T>& Temp, int* pos, double 
 		}
 
 		// EigenValues
-		for (i = m; i < Q.rows; ++i) {
+		for (i = 0; i < Q.rows; ++i) {
 			shift += v[i];
 			__add(v, -v[i], v, Q.rows);
 
-			x = __EVD_Q_QR_CDC_Solve_EigenValue_Start(Q.rows, z, v, i);
-			temp = __EVD_Q_QR_CDC_Solve_EigenValue(Q.rows, z, v, 1.0 / x);
+			x = __EVD_Q_QR_CDC_Solve_EigenValue_Start(Q.rows, z, v, i, eps);
+			temp = __EVD_Q_QR_CDC_Solve_EigenValue(Q.rows, z, v, 1.0 / x, i);
 
 			while (fabs(temp) > eps) {
 				x += temp * x * x;
-				temp = __EVD_Q_QR_CDC_Solve_EigenValue(Q.rows, z, v, 1.0 / x);
+				temp = __EVD_Q_QR_CDC_Solve_EigenValue(Q.rows, z, v, 1.0 / x, i);
 			}
-			w[i] = (1.0 / x + shift) * p;
+			w[i] = (1.0 / x + shift) * p; 
 		}
 
+		/*
+		for (i = 0; i < Q.rows; ++i) {
+			std::cout << w[i] << std::endl;
+		}
+		std::cout << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl;
+		std::cout << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl;
+		std::cout << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl;
+		std::cout << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl;
+		std::cout << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl << std::endl;
+		//*/
 		// EigenVectors
 		__set0(Q.data, Q.rows * Q.cols);
 		__EVD_Q_QR_CDC_u(Q.rows, w, d, u, p, eps);
@@ -243,25 +233,42 @@ void __EVD_Q_QR_CDC_Solve(T* w, T* v, MAT<T>& Q, MAT<T>& Temp, int* pos, double 
 		std::cout << std::endl;
 		//*/
 
-		for (i = 0; i < m; ++i) {
-			j = pos[i];
-			if (j < s)
-				__copy(Q[i], Q1[j], s);
-			else
-				__copy(Q[i] + s, Q2[j - s], t);
-		}
-		for (i = m; i < Q.rows; ++i) {
+		for (i = 0; i < Q.rows; ++i) {
 			for (j = 0; j < Q.rows; ++j) {
 				v[j] = u[j] / (d[j] - w[i]);
 			}
 
-			p = sqrt(__dot(v, v, Q.rows));
-			__times(v, 1.0 / p, v, Q.rows);
-			for (j = 0; j < s; ++j) {
-				__mixed(Q[i], Q1[j], v[j], Q[i], s);
+			p = 1.0 / eps;
+			for (j = 0; j < Q.rows; ++j) {
+				if (v[j] * v[j] > p) {
+					break;
+				}
 			}
-			for (j = 0; j < t; ++j) {
-				__mixed(Q[i] + s, Q2[j], v[s + j], Q[i] + s, t);
+			/*
+			for (i = 0; i < Q.rows; ++i) {
+				std::cout << v[i] << std::endl;
+			}
+			std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			*/
+			if (j == Q.rows) {
+				p = sqrt(__dot(v, v, Q.rows));
+				__times(v, 1.0 / p, v, Q.rows);
+				for (j = 0; j < s; ++j) {
+					__mixed(Q[i], Q1[j], v[j], Q[i], s);
+				}
+				for (j = 0; j < t; ++j) {
+					__mixed(Q[i] + s, Q2[j], v[s + j], Q[i] + s, t);
+				}
+			}
+			else {
+				if (j < s)
+					__copy(Q[i], Q1[j], s);
+				else
+					__copy(Q[i] + s, Q2[j - s], t);
 			}
 		}
 

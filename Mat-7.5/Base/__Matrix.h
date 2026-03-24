@@ -82,6 +82,19 @@ public:
 		for (int i = 0; i < s; ++i)
 			data[i] = a;
 	}
+	void diagnose(T* a) {
+		for (int i = 0; i < rows; ++i)
+			(data + i * rows)[i] = a;
+	}
+	template<typename t>
+	void diagnose(t* a, int size) {
+		init(size, size);
+		int s = rows * cols;
+		for (int i = 0; i < s; ++i)
+			data[i] = 0;
+		for (int i = 0; i < rows; ++i)
+			(data + i * rows)[i] = a[i];
+	}
 
 	T* operator [] (int c) {
 		return (data + rows * c);

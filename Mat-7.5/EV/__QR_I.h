@@ -8,16 +8,16 @@ void __EV_HouseHolder_I(MAT<complex<t>>& R, complex<t>* w, complex<t>* v) {
 	int m, n;
 	for (m = 0; m < R.rows - 2; ++m) {
 		n = m + 1;
-		__copy(w + n, R[m] + n, R.rows - n);
-		cr = sqrt(__dot((t*)(w + n), (t*)(w + n), (R.rows - n) * 2));
+		__copy(w, R[m] + n, R.rows - n);
+		cr = sqrt(__dot((t*)w, (t*)w, (R.rows - n) * 2));
 
-		_sign = sign(w[n]) * cr;
-		hr = 1 / sqrt(cr * cr - times_conj(_sign, w[n]).real);
-		w[n] -= _sign;
+		_sign = sign(*w) * cr;
+		hr = 1 / sqrt(cr * cr - times_conj(_sign, *w).real);
+		*w -= _sign;
 
-		__times((t*)(w + n), hr, (t*)(w + n), (R.rows - n) * 2);
+		__times((t*)w, hr, (t*)w, (R.rows - n) * 2);
 
-		__ApplyHouseHolderOnTheRight(R, w, v, n);
+		__ApplyHouseHolderOnTheRight(R, w - n, v, n);
 		__ApplyHouseHolderOnTheLeft2(R, w, m, n);
 	}
 }
@@ -64,7 +64,7 @@ void __EV_Givens_I(MAT<complex<t>>& R, int m, int n, double eps) {
 		s = t * c;
 		_s = s.conj();
 
-		for (i = m; i < R.rows; ++i) {
+		for (i = m; i < n; ++i) {
 			Temp = R[i];
 
 			temp = Temp[m] * c + Temp[m + 1] * _s;
@@ -81,7 +81,7 @@ void __EV_Givens_I(MAT<complex<t>>& R, int m, int n, double eps) {
 			s = t * c;
 			_s = s.conj();
 
-			for (i = r - 1; i < R.rows; ++i) {
+			for (i = r - 1; i < n; ++i) {
 				Temp = R[i];
 
 				temp = Temp[r] * c + Temp[r + 1] * _s;

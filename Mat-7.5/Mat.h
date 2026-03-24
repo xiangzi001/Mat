@@ -60,10 +60,8 @@ enum SVD_type {
 	SVD_Eigen_Jacobi//thin
 };
 
-#include "SIMD/SIMD.h"
+//#include "SIMD/SIMD.h"
 #include "Base/Base.h"
-
-#include "Math/_extra/extra.h"
 
 #include "LU/LU.h"
 

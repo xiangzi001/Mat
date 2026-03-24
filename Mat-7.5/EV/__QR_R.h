@@ -6,16 +6,16 @@ void __EV_HouseHolder_R(MAT<T>& R, T* w, T* v) {
 
 	for (m = 0; m < R.rows - 2; ++m) {
 		n = m + 1;
-		__copy(w + n, R[m] + n, R.rows - n);
-		cr = sqrt(__dot(w + n, w + n, R.rows - n));
+		__copy(w, R[m] + n, R.rows - n);
+		cr = sqrt(__dot(w, w, R.rows - n));
 
-		if (w[n] < 0.0)cr = -cr;
-		w[n] += cr;
-		hr = 1.0 / sqrt(cr * w[n]);
+		if (*w < 0.0)cr = -cr;
+		*w += cr;
+		hr = 1.0 / sqrt(cr * *w);
 
-		__times(w + n, hr, w + n, R.rows - n);
+		__times(w, hr, w, R.rows - n);
 
-		__ApplyHouseHolderOnTheRight(R, w, v, n);
+		__ApplyHouseHolderOnTheRight(R, w - n, v, n);
 		__ApplyHouseHolderOnTheLeft2(R, w, m, n);
 	}
 }
@@ -75,18 +75,18 @@ void __EV_QR_R(MAT<T>& R, int m, int n, double eps) {
 			if (m + 4 < n) k = m + 4;
 			else k = n;
 			__Schur_HouseHolder_Right(R[m], R[m + 1], R[m + 2], w, k);
-			for (i = m; i < R.cols; ++i) {
-				Temp = R[i];
+			for (i = m; i < n; ++i) {
+				Temp = R[i] + m;
 
-				temp = Temp[m] * w[0] + Temp[m + 1] * w[1] + Temp[m + 2] * w[2];
-				Temp[m] -= w[0] * temp;
-				Temp[m + 1] -= w[1] * temp;
-				Temp[m + 2] -= w[2] * temp;
+				temp = Temp[0] * w[0] + Temp[1] * w[1] + Temp[2] * w[2];
+				Temp[0] -= w[0] * temp;
+				Temp[1] -= w[1] * temp;
+				Temp[2] -= w[2] * temp;
 			}
 
 			for (r = m + 1; r < n - 2; ++r) {
-				Temp = R[r - 1];
-				w[0] = Temp[r]; w[1] = Temp[r + 1]; w[2] = Temp[r + 2];
+				Temp = R[r - 1] + r;
+				w[0] = Temp[0]; w[1] = Temp[1]; w[2] = Temp[2];
 				temp = sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 				if (w[0] < 0.0)temp = -temp;
 				w[0] += temp;
@@ -96,13 +96,13 @@ void __EV_QR_R(MAT<T>& R, int m, int n, double eps) {
 				if (r + 4 < n) k = r + 4;
 				else k = n;
 				__Schur_HouseHolder_Right(R[r], R[r + 1], R[r + 2], w, k);
-				for (i = r - 1; i < R.cols; ++i) {
-					Temp = R[i];
+				for (i = r - 1; i < n; ++i) {
+					Temp = R[i] + r;
 
-					temp = Temp[r] * w[0] + Temp[r + 1] * w[1] + Temp[r + 2] * w[2];
-					Temp[r] -= w[0] * temp;
-					Temp[r + 1] -= w[1] * temp;
-					Temp[r + 2] -= w[2] * temp;
+					temp = Temp[0] * w[0] + Temp[1] * w[1] + Temp[2] * w[2];
+					Temp[0] -= w[0] * temp;
+					Temp[1] -= w[1] * temp;
+					Temp[2] -= w[2] * temp;
 				}
 			}
 
@@ -111,11 +111,11 @@ void __EV_QR_R(MAT<T>& R, int m, int n, double eps) {
 			y = temp * x;
 
 			__ApplyGivensOnTheRight(R[r], R[r + 1], x, y, n);
-			for (i = r - 1; i < R.cols; ++i) {
-				Temp = R[i];
-				temp = Temp[r] * x + Temp[r + 1] * y;
-				Temp[r + 1] = Temp[r + 1] * x - Temp[r] * y;
-				Temp[r] = temp;
+			for (i = r - 1; i < n; ++i) {
+				Temp = R[i] + r;
+				temp = Temp[0] * x + Temp[1] * y;
+				Temp[1] = Temp[1] * x - Temp[0] * y;
+				Temp[0] = temp;
 			}
 		}
 		else {
@@ -137,12 +137,11 @@ void __EV_QR_R(MAT<T>& R, int m, int n, double eps) {
 			if (m + 3 < n) k = m + 3;
 			else k = n;
 			__ApplyGivensOnTheRight(R[m], R[m + 1], x, y, k);
-			for (i = m; i < R.cols; ++i) {
-				Temp = R[i];
-
-				temp = Temp[m] * x + Temp[m + 1] * y;
-				Temp[m + 1] = Temp[m + 1] * x - Temp[m] * y;
-				Temp[m] = temp;
+			for (i = m; i < n; ++i) {
+				Temp = R[i] + m;
+				temp = Temp[0] * x + Temp[1] * y;
+				Temp[1] = Temp[1] * x - Temp[0] * y;
+				Temp[0] = temp;
 			}
 
 			for (r = m + 1; r < n - 1; ++r) {
@@ -160,12 +159,11 @@ void __EV_QR_R(MAT<T>& R, int m, int n, double eps) {
 				if (r + 3 < n) k = r + 3;
 				else k = n;
 				__ApplyGivensOnTheRight(R[r], R[r + 1], x, y, k);
-				for (i = r - 1; i < R.cols; ++i) {
-					Temp = R[i];
-
-					temp = Temp[r] * x + Temp[r + 1] * y;
-					Temp[r + 1] = Temp[r + 1] * x - Temp[r] * y;
-					Temp[r] = temp;
+				for (i = r - 1; i < n; ++i) {
+					Temp = R[i] + r;
+					temp = Temp[0] * x + Temp[1] * y;
+					Temp[1] = Temp[1] * x - Temp[0] * y;
+					Temp[0] = temp;
 				}
 			}
 		}
