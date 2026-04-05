@@ -163,7 +163,7 @@ auto MAT<T>::transpose() {
 
 template<typename t>
 MAT<t> _H(const MAT<t>& A) {
-	MAT<complex<t>> n(A.cols, A.rows);
+	MAT<t> n(A.cols, A.rows);
 	int i, j;
 	for (i = 0; i < n.rows; ++i)
 		for (j = 0; j < n.cols; ++j) {

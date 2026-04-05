@@ -7,8 +7,8 @@ inline void __ApplyGivensOnTheRight(double* __restrict a, double* __restrict b, 
     for (i = 0; i < n; ++i) {
         ai = ((__m512d*)a)[i];
         bi = ((__m512d*)b)[i];
-		((__m512d*)a)[i] = _mm512_add_pd(_mm512_mul_pd(ai, cc), _mm512_mul_pd(bi, ss));
-		((__m512d*)b)[i] = _mm512_sub_pd(_mm512_mul_pd(bi, cc), _mm512_mul_pd(ai, ss));
+		((__m512d*)a)[i] = _mm512_fmadd_pd(ai, cc, _mm512_mul_pd(bi, ss));
+		((__m512d*)b)[i] = _mm512_fnmadd_pd(ai, ss, _mm512_mul_pd(bi, cc));
     }
 
 	n = len - n * 8;
@@ -16,8 +16,8 @@ inline void __ApplyGivensOnTheRight(double* __restrict a, double* __restrict b, 
 		__mmask8 mask = (1 << n) - 1;
 		ai = ((__m512d*)a)[i];
 		bi = ((__m512d*)b)[i];
-		((__m512d*)a)[i] = _mm512_mask_blend_pd(mask, ai, _mm512_add_pd(_mm512_mul_pd(ai, cc), _mm512_mul_pd(bi, ss)));
-		((__m512d*)b)[i] = _mm512_mask_blend_pd(mask, bi, _mm512_sub_pd(_mm512_mul_pd(bi, cc), _mm512_mul_pd(ai, ss)));
+		((__m512d*)a)[i] = _mm512_mask_blend_pd(mask, ai, _mm512_fmadd_pd(ai, cc, _mm512_mul_pd(bi, ss)));
+		((__m512d*)b)[i] = _mm512_mask_blend_pd(mask, bi, _mm512_fnmadd_pd(ai, ss, _mm512_mul_pd(bi, cc)));
 	}
 }
 
@@ -30,23 +30,23 @@ inline void __Schur_HouseHolder_Right(
 	int n = len / 8;
 	int i;
 	for (i = 0; i < n; ++i) {
-		sum = _mm512_add_pd(_mm512_add_pd(
-			_mm512_mul_pd(((__m512d*)a)[i], w0), 
-			_mm512_mul_pd(((__m512d*)b)[i], w1) ), 
-			_mm512_mul_pd(((__m512d*)c)[i], w2) );
-		((__m512d*)a)[i] = _mm512_sub_pd(((__m512d*)a)[i], _mm512_mul_pd(sum, w0));
-		((__m512d*)b)[i] = _mm512_sub_pd(((__m512d*)b)[i], _mm512_mul_pd(sum, w1));
-		((__m512d*)c)[i] = _mm512_sub_pd(((__m512d*)c)[i], _mm512_mul_pd(sum, w2));
+		sum = 
+			_mm512_fmadd_pd(((__m512d*)a)[i], w0,
+			_mm512_fmadd_pd(((__m512d*)b)[i], w1,
+			_mm512_mul_pd(((__m512d*)c)[i], w2)));
+		((__m512d*)a)[i] = _mm512_fnmadd_pd(sum, w0, ((__m512d*)a)[i]);
+		((__m512d*)b)[i] = _mm512_fnmadd_pd(sum, w1, ((__m512d*)b)[i]);
+		((__m512d*)c)[i] = _mm512_fnmadd_pd(sum, w2, ((__m512d*)c)[i]);
 	}
 	n = len - n * 8;
 	if (n != 0) {
-		sum = _mm512_mask_blend_pd((1 << n) - 1, _mm512_setzero_pd(), _mm512_add_pd(_mm512_add_pd(
-			_mm512_mul_pd(((__m512d*)a)[i], w0),
-			_mm512_mul_pd(((__m512d*)b)[i], w1)),
-			_mm512_mul_pd(((__m512d*)c)[i], w2)));
-		((__m512d*)a)[i] = _mm512_sub_pd(((__m512d*)a)[i], _mm512_mul_pd(sum, w0));
-		((__m512d*)b)[i] = _mm512_sub_pd(((__m512d*)b)[i], _mm512_mul_pd(sum, w1));
-		((__m512d*)c)[i] = _mm512_sub_pd(((__m512d*)c)[i], _mm512_mul_pd(sum, w2));
+		sum = _mm512_mask_blend_pd((1 << n) - 1, _mm512_setzero_pd(),
+			_mm512_fmadd_pd(((__m512d*)a)[i], w0,
+			_mm512_fmadd_pd(((__m512d*)b)[i], w1,
+			_mm512_mul_pd(((__m512d*)c)[i], w2))));
+		((__m512d*)a)[i] = _mm512_fnmadd_pd(sum, w0, ((__m512d*)a)[i]);
+		((__m512d*)b)[i] = _mm512_fnmadd_pd(sum, w1, ((__m512d*)b)[i]);
+		((__m512d*)c)[i] = _mm512_fnmadd_pd(sum, w2, ((__m512d*)c)[i]);
 	}
 }
 
@@ -82,11 +82,11 @@ inline void __mixed(double* __restrict a, double* __restrict b, double q, double
 	int n = len / 8;
 	int i;
 	for (i = 0; i < n; ++i) {
-		((__m512d*)ans)[i] = _mm512_add_pd(((__m512d*)a)[i], _mm512_mul_pd(((__m512d*)b)[i], qq));
+		((__m512d*)ans)[i] = _mm512_fmadd_pd(((__m512d*)b)[i], qq, ((__m512d*)a)[i]);
 	}
 	n = len - n * 8;
 	if (n != 0) {
-		((__m512d*)ans)[i] = _mm512_mask_blend_pd((1 << n) - 1, ((__m512d*)ans)[i], _mm512_add_pd(((__m512d*)a)[i], _mm512_mul_pd(((__m512d*)b)[i], qq)));
+		((__m512d*)ans)[i] = _mm512_mask_blend_pd((1 << n) - 1, ((__m512d*)ans)[i], _mm512_fmadd_pd(((__m512d*)b)[i], qq, ((__m512d*)a)[i]));
 	}
 }
 
@@ -113,12 +113,13 @@ inline double __dot(double* __restrict a, double* __restrict b, int len) {
 	int n = len / 8;
 	int i;
 	for (i = 0; i < n; ++i) {
-		ans = _mm512_add_pd(ans, _mm512_mul_pd(((__m512d*)a)[i], ((__m512d*)b)[i]));
+		ans = _mm512_fmadd_pd(((__m512d*)a)[i], ((__m512d*)b)[i], ans);
 	}
 	n = len - n * 8;
 	if (n != 0) {
-		ans = _mm512_mask_blend_pd((1 << n) - 1, ans, _mm512_add_pd(ans, _mm512_mul_pd(((__m512d*)a)[i], ((__m512d*)b)[i])));
+		ans = _mm512_mask_blend_pd((1 << n) - 1, ans, _mm512_fmadd_pd(((__m512d*)a)[i], ((__m512d*)b)[i], ans));
 	}
 
 	return _mm512_reduce_add_pd(ans);
 }
+
