@@ -1,0 +1,118 @@
+
+#ifndef XiangZiMatImport
+#define XiangZiMatImport
+
+#include <cmath>
+#include <utility>
+
+#ifndef va_start
+#define va_start(ap, x) (void)(__vcrt_assert_va_start_is_not_reference<decltype(x)>(), (void)(__va_start(&ap, x)))
+#endif // !va_start
+
+#ifndef va_arg
+#define va_arg(ap, t)                                               \
+        ((sizeof(t) > sizeof(__int64) || (sizeof(t) & (sizeof(t) - 1)) != 0) \
+            ? **(t**)((ap += sizeof(__int64)) - sizeof(__int64))             \
+            :  *(t* )((ap += sizeof(__int64)) - sizeof(__int64)))
+#endif // !va_arg
+
+#ifndef va_end
+#define va_end(ap)        ((void)(ap = (va_list)0))
+#endif // !va_end
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
+//
+// 
+// void random(MAT<T>& A, int r, int c, int Big, int Small)
+// void random(MAT<complex<T>>& A, int r, int c, int Big, int Small)
+// MAT<t> _T(MAT<t>& A)
+// MAT<complex<t>> _H(MAT<complex<t>>& A)
+// 
+// double Norm_one(MAT<T>& A)
+// double Norm_inf(MAT<T>& A)
+// T Norm_F(MAT<T>& A)
+// 
+// T Det(MAT<T>& n)
+// void Solve_direct(MAT<T>& A, MAT<T>& B)
+// MAT<T> Inv(MAT<T>& A)
+// 
+// void LU(MAT<t1>& A, MAT<t2>& L, MAT<t2>& U)
+// void LLT(MAT<T>& A, MAT<T>& L)
+// void LDLT(MAT<T>& A, MAT<T>& L, MAT<T>& D)
+//  
+// void QR(MAT<t1>& A, MAT<t2>& Q, MAT<t2>& R, QR_type type)
+// void QR(MAT<t1>& A, MAT<complex<t2>>& Q, MAT<complex<t2>>& R, QR_type type)
+// 
+// void Schur_R(MAT<t1>& A, MAT<t2>& T, MAT<t2>& U, t2 eps)
+// void Schur_I(MAT<t1>& A, MAT<complex<t2>>& T, MAT<complex<t2>>& U, t2 eps)
+// 
+// void EVD_Q(MAT<t1>& A, MAT<t2>& E, MAT<t2>& Q, t2 eps, EVD_type type)
+// void EVD_X(MAT<t1>& A, MAT<complex<t2>>& E, MAT<complex<t2>>& X, t2 eps)
+// void EVD_X(MAT<complex<t1>>& A, MAT<complex<t2>>& E, MAT<complex<t2>>& X, t2 eps)
+// 
+// void EV(MAT<t1>& A, complex<t2>* E, t2 eps)
+// void EV(MAT<complex<t1>>& A, complex<t2>* E, t2 eps)
+// void Roots(Func<t1>& func, complex<t2>* ans, t2 eps)
+// 
+// void SVD(MAT<t1>& A, MAT<t2>& U, MAT<t2>& S, MAT<t2>& V, t2 eps, SVD_type type)
+// 
+
+enum QR_type {
+	QR_HouseHolder,
+	QR_Givens,
+	QR_GramSchmidt
+};
+enum EVD_type {
+	EVD_QR,
+	EVD_Jacobi
+};
+enum SVD_type {
+	SVD_QR,
+	SVD_Jacobi
+};
+
+//#include "SIMD/SIMD.h"
+#include "Base/Base.h"
+
+template<typename t1, typename t2>
+void LU_init(MAT<t1>& A, MAT<t2>& L, MAT<t2>& U) {
+	L.init(A.rows, A.rows);
+	U.init(A.rows, A.cols);
+}
+#include "LU/LU.h"
+
+template<typename t1, typename t2>
+void QR_init(MAT<t1>& A, MAT<t2>& Q, MAT<t2>& R) {
+	Q.init(A.rows, A.rows);
+	R.init(A.rows, A.cols);
+}
+#include "QR/QR.h"
+
+template<typename t1, typename t2>
+void EVD_init(MAT<t1>& A, MAT<t2>& E, MAT<t2>& X) {
+	E.init(A.rows, A.rows);
+	X.init(A.rows, A.rows);
+}
+#include "Schur/Schur.h"
+#include "EV/EV.h"
+#include "EVD/EVD_Q.h"
+#include "EVD/EVD_X.h"
+
+template<typename t1, typename t2>
+void SVD_init(MAT<t1>& A, MAT<t2>& U, MAT<t2>& S, MAT<t2>& V) {
+	U.init(A.rows, A.rows);
+	S.init(A.rows, A.cols);
+	V.init(A.cols, A.cols);
+}
+#include "SVD/SVD.h"
+
+#include "Geometry/Geometry.h"
+
+#endif
