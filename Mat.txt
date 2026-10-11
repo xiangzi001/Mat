@@ -120,5 +120,18 @@ BLAS3级别优化
 矩阵分块乘法、LLT、LDLT、LU、求解线性方程组
 
 8.1
+修复求解线性方程组
 分块EVD_Q
+
+8.2
+1
+删掉了分块EVD_Q
+2.0
+分块乘法、LU、PLU、Solve
+2.1
+SIMD全支持
+
+8.3
+打包乘法、LU、PLU、Solve、Inv、LLT、LDLT、QR
+Inv小矩阵未分支，未节省一个矩阵B
 
