@@ -1,6 +1,11 @@
 # Mat
 
-Copyright (C) 2023-2026 xiangzi001 <https://github.com/xiangzi001/Mat>
+Copyright (C) 2024-2026 xiangzi001 <https://github.com/xiangzi001/Mat>
+
+Version history:
+- 1.0 – 5.0: 2024-2025
+- 5.1 – 7.1: 2025-2026
+- 7.2 – 8.3: 2026
 
 ## License
 
