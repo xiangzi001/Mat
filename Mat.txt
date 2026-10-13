@@ -113,7 +113,7 @@ SVD集中双对角迭代
 更改内存存储方式
 优化了EVD_Q的Householder，计算量少一大半
 7.6
-不分块算法完结
+不分块算法完结，128以内小矩阵几乎最快了
 
 8.0
 BLAS3级别优化
@@ -124,14 +124,19 @@ BLAS3级别优化
 分块EVD_Q
 
 8.2
-1
+8.2.1
 删掉了分块EVD_Q
-2.0
-分块乘法、LU、PLU、Solve
-2.1
+8.2.2.0
+分块的乘法、LU、PLU、Solve
+
+8.2.2.1
 SIMD全支持
 
 8.3
-打包乘法、LU、PLU、Solve、Inv、LLT、LDLT、QR
-Inv小矩阵未分支，未节省一个矩阵B
+改成非方阵微内核
+打包分块，修改乘法、LU、PLU、Solve、Inv、LLT、LDLT
+增加分块的QR算法
+
+8.3.1
+Inv小矩阵分支、Solve_LX/UX/XU/XL更好的向量化
 
